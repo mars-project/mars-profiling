@@ -6,13 +6,13 @@ include LICENSE
 include *.md
 
 # Styles
-include src/pandas_profiling/visualisation/*.mplstyle
+include src/mars_profiling/visualisation/*.mplstyle
 
 # Templates and static resources
-recursive-include src/pandas_profiling/report/presentation/flavours/html/templates *.html *.js *.css
+recursive-include src/mars_profiling/report/presentation/flavours/html/templates *.html *.js *.css
 
 # Configuration
-include src/pandas_profiling/*.yaml
+include src/mars_profiling/*.yaml
 
 # Exclude development, docs, testing and example code
 exclude .pre-commit-config.yaml

@@ -147,7 +147,7 @@ Start by loading in your pandas DataFrame, e.g. by using:
 ```python
 import numpy as np
 import pandas as pd
-from pandas_profiling import ProfileReport
+from mars_profiling import ProfileReport
 
 df = pd.DataFrame(
     np.random.rand(100, 5),
@@ -228,7 +228,7 @@ For standard formatted CSV files that can be read immediately by pandas, you can
 Run the following for information about options and arguments.
 
 ```sh
-pandas_profiling -h
+mars_profiling -h
 ```
 
 ### Advanced usage
@@ -297,8 +297,8 @@ A low threshold place to ask questions or start contributing is by reaching out 
 2. Locate your `pandas-profiling` executable.
     - On macOS / Linux / BSD:
         ```sh
-        $ which pandas_profiling
-        (example) /usr/local/bin/pandas_profiling
+        $ which mars_profiling
+        (example) /usr/local/bin/mars_profiling
         ```
     - On Windows:
         ```console

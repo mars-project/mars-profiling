@@ -4,7 +4,7 @@ https://github.com/pandas-profiling/pandas-profiling/issues/388
 """
 import pytest
 
-from pandas_profiling.controller import console
+from mars_profiling.controller import console
 
 
 def test_issue388(get_data_file, test_output_dir):

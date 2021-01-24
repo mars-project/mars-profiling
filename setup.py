@@ -13,7 +13,7 @@ with (source_root / "requirements.txt").open(encoding="utf8") as f:
 
 version = "2.10.0"
 
-with (source_root / "src" / "pandas_profiling" / "version.py").open(
+with (source_root / "src" / "mars_profiling" / "version.py").open(
     "w", encoding="utf-8"
 ) as f:
     f.writelines(
@@ -25,15 +25,15 @@ with (source_root / "src" / "pandas_profiling" / "version.py").open(
     )
 
 setup(
-    name="pandas-profiling",
+    name="mars-profiling",
     version=version,
     author="Simon Brugman",
     author_email="pandasprofiling@gmail.com",
     packages=find_packages("src"),
     package_dir={"": "src"},
-    url="https://github.com/pandas-profiling/pandas-profiling",
+    url="https://github.com/mars-project/mars-profiling",
     license="MIT",
-    description="Generate profile report for pandas DataFrame",
+    description="Generate profile report for Mars DataFrame",
     python_requires=">=3.6",
     install_requires=requirements,
     extras_require={
@@ -63,7 +63,7 @@ setup(
     long_description_content_type="text/markdown",
     entry_points={
         "console_scripts": [
-            "pandas_profiling = pandas_profiling.controller.console:main"
+            "mars_profiling = mars_profiling.controller.console:main"
         ]
     },
     options={"bdist_wheel": {"universal": True}},

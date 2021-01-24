@@ -7,8 +7,8 @@ import sys
 import pandas as pd
 import pytest
 
-import pandas_profiling
-from pandas_profiling.utils.cache import cache_file
+import mars_profiling
+from mars_profiling.utils.cache import cache_file
 
 
 @pytest.mark.skipif(sys.version_info < (3, 6), reason="requires python3.6 or higher")
@@ -23,7 +23,7 @@ def test_issue377():
 
     original_order = tuple(df.columns.values)
 
-    profile = pandas_profiling.ProfileReport(
+    profile = mars_profiling.ProfileReport(
         df, sort="None", pool_size=5, progress_bar=False
     )
     new_order = tuple(profile.get_description()["variables"].keys())

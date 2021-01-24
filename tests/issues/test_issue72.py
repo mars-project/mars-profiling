@@ -5,9 +5,9 @@ https://github.com/pandas-profiling/pandas-profiling/issues/72
 import numpy as np
 import pandas as pd
 
-import pandas_profiling
-from pandas_profiling.config import config
-from pandas_profiling.model.base import Variable
+import mars_profiling
+from mars_profiling.config import config
+from mars_profiling.model.base import Variable
 
 
 def test_issue72_higher():
@@ -17,7 +17,7 @@ def test_issue72_higher():
 
     df = pd.DataFrame({"A": [1, 2, 3, 3]})
     df["B"] = df["A"].apply(str)
-    report = pandas_profiling.ProfileReport(df)
+    report = mars_profiling.ProfileReport(df)
 
     # 3 > 2, so numerical
     assert report.get_description()["variables"]["A"]["type"] == Variable.TYPE_NUM
@@ -28,7 +28,7 @@ def test_issue72_higher():
 def test_issue72_equal():
     df = pd.DataFrame({"A": [1, 2, 3, 3]})
     df["B"] = df["A"].apply(str)
-    report = pandas_profiling.ProfileReport(
+    report = mars_profiling.ProfileReport(
         df,
         vars={"num": {"low_categorical_threshold": 3}},
         correlations={"recoded": {"calculate": False}},

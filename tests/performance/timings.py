@@ -7,7 +7,7 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-from pandas_profiling import ProfileReport
+from mars_profiling import ProfileReport
 
 
 def generate_column_names(n):

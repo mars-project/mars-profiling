@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 
-import pandas_profiling
+import mars_profiling
 
 
 def test_sensitive():

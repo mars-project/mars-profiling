@@ -1,0 +1,7 @@
+from mars_profiling.report.presentation.core import ToggleButton
+from mars_profiling.report.presentation.flavours.html import templates
+
+
+class HTMLToggleButton(ToggleButton):
+    def render(self):
+        return templates.template("toggle_button.html").render(**self.content)

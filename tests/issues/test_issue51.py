@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import requests
 
-import pandas_profiling
+import mars_profiling
 
 
 def test_issue51(get_data_file):

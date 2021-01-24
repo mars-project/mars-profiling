@@ -5,8 +5,8 @@ https://github.com/pandas-profiling/pandas-profiling/issues/437
 import numpy as np
 import pandas as pd
 
-import pandas_profiling
-from pandas_profiling.model.base import Variable
+import mars_profiling
+from mars_profiling.model.base import Variable
 
 
 def test_issue437():
@@ -37,7 +37,7 @@ def test_issue437():
             }
         )
 
-        report = pandas_profiling.ProfileReport(df)
+        report = mars_profiling.ProfileReport(df)
         description_set = report.description_set
 
         assert description_set["variables"]["a"]["type"] == Variable.TYPE_NUM

@@ -1,8 +1,8 @@
 import kaggle
 import pandas as pd
 
-import pandas_profiling
-from pandas_profiling.utils.paths import get_data_path
+import mars_profiling
+from mars_profiling.utils.paths import get_data_path
 
 # The dataset in this example is obtained using the `kaggle` api.
 # If you haven't done so already, you should set up the api credentials:

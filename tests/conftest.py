@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from pandas_profiling import config
-from pandas_profiling.utils.cache import cache_file
+from mars_profiling import config
+from mars_profiling.utils.cache import cache_file
 
 
 def pytest_configure(config):

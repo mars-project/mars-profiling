@@ -1,6 +1,6 @@
 import pytest
 
-from pandas_profiling.model.summary import sort_column_names
+from mars_profiling.model.summary import sort_column_names
 
 
 @pytest.fixture()

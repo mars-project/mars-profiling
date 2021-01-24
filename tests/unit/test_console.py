@@ -1,7 +1,7 @@
 import pytest
 
-from pandas_profiling.controller import console
-from pandas_profiling.utils.paths import get_config_default
+from mars_profiling.controller import console
+from mars_profiling.utils.paths import get_config_default
 
 
 @pytest.fixture

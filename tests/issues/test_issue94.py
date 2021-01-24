@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pandas as pd
 
-import pandas_profiling
+import mars_profiling
 
 
 def test_issue94(tmpdir):
@@ -28,5 +28,5 @@ CHEM
 CHEM"""
     )
     df = pd.read_csv(str(file_path), parse_dates=True)
-    profile = pandas_profiling.ProfileReport(df, title="Pandas Profiling Report")
+    profile = mars_profiling.ProfileReport(df, title="Pandas Profiling Report")
     assert "<title>Pandas Profiling Report</title>" in profile.to_html()

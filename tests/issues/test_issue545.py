@@ -6,7 +6,7 @@ https://github.com/pandas-profiling/pandas-profiling/issues/545
 import pandas as pd
 import pytest
 
-import pandas_profiling
+import mars_profiling
 
 
 def pandas_version():

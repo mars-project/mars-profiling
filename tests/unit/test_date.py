@@ -1,7 +1,7 @@
 import pandas as pd
 
-from pandas_profiling import ProfileReport
-from pandas_profiling.model.messages import MessageType
+from mars_profiling import ProfileReport
+from mars_profiling.model.messages import MessageType
 
 
 def test_check_date_type_warning():

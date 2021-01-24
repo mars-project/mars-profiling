@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from pandas_profiling.report.formatters import (
+from mars_profiling.report.formatters import (
     fmt_array,
     fmt_bytesize,
     fmt_class,

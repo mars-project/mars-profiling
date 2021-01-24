@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-import pandas_profiling
+import mars_profiling
 
 
 def test_decorator(get_data_file):

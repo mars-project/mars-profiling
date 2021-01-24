@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from pandas_profiling.model.base import Variable, get_var_type
+from mars_profiling.model.base import Variable, get_var_type
 
 
 def test_numeric_with_inf():

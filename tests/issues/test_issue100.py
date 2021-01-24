@@ -5,7 +5,7 @@ https://github.com/pandas-profiling/pandas-profiling/issues/100
 import numpy as np
 import pandas as pd
 
-from pandas_profiling import ProfileReport
+from mars_profiling import ProfileReport
 
 
 def test_issue100():

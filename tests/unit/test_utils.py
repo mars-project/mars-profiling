@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from pandas_profiling.utils.dataframe import expand_mixed, read_pandas, warn_read
+from mars_profiling.utils.dataframe import expand_mixed, read_pandas, warn_read
 
 
 def test_read_pandas_parquet():

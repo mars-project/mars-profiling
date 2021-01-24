@@ -1,5 +1,5 @@
-from pandas_profiling import ProfileReport
-from pandas_profiling.config import config
+from mars_profiling import ProfileReport
+from mars_profiling.config import config
 
 
 def test_set_variable():

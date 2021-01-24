@@ -4,7 +4,7 @@ https://github.com/pandas-profiling/pandas-profiling/issues/200
 """
 import pandas as pd
 
-import pandas_profiling
+import mars_profiling
 
 
 def test_issue200():

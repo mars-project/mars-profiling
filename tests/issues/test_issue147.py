@@ -4,7 +4,7 @@ https://github.com/pandas-profiling/pandas-profiling/issues/147
 """
 import pandas as pd
 
-from pandas_profiling import ProfileReport
+from mars_profiling import ProfileReport
 
 
 def test_issue147(get_data_file):

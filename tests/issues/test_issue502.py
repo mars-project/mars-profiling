@@ -4,7 +4,7 @@ https://github.com/pandas-profiling/pandas-profiling/issues/502
 """
 import pandas as pd
 
-from pandas_profiling.model.summary import describe_1d
+from mars_profiling.model.summary import describe_1d
 
 
 def test_issue502():

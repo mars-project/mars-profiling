@@ -5,7 +5,7 @@ https://github.com/pandas-profiling/pandas-profiling/pull/397
 import numpy as np
 import pandas as pd
 
-import pandas_profiling
+import mars_profiling
 
 
 def test_issue397():
@@ -19,7 +19,7 @@ def test_issue397():
         }
     )
 
-    report = pandas_profiling.ProfileReport(
+    report = mars_profiling.ProfileReport(
         df, vars={"num": {"low_categorical_threshold": 0}}
     )
 

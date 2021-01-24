@@ -3,7 +3,7 @@ import json
 import pandas as pd
 import pytest
 
-from pandas_profiling import ProfileReport
+from mars_profiling import ProfileReport
 
 
 @pytest.fixture
