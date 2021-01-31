@@ -230,29 +230,22 @@ def describe_1d(series: pd.Series) -> dict:
             float
         )
         if chi_squared_threshold > 0.0:
-            histogram, _ = np.histogram(finite_values, bins="auto")
+            histogram, _ = mt.histogram(finite_values, bins="auto")
             stats["chi_squared"] = chisquare(histogram)
 
         stats["range"] = stats["max"] - stats["min"]
-        # stats.update(
-        #     {
-        #         f"{percentile:.0%}": value
-        #         for percentile, value in series.quantile(quantiles).to_dict().items()
-        #     }
-        # )
-        # stats["iqr"] = stats["75%"] - stats["25%"]
-        # stats["cv"] = stats["std"] / stats["mean"] if stats["mean"] else np.NaN
+        stats.update({
+            f"{q:.0%}": series.quantile(q) for q in quantiles
+        })
+        stats["iqr"] = stats["75%"] - stats["25%"]
+        stats["cv"] = stats["std"] / stats["mean"]
         stats["p_zeros"] = stats["n_zeros"] / series_description["n"]
 
-        # stats["monotonic_increase"] = series.is_monotonic_increasing
-        # stats["monotonic_decrease"] = series.is_monotonic_decreasing
+        stats["monotonic_increase"] = series.is_monotonic_increasing
+        stats["monotonic_decrease"] = series.is_monotonic_decreasing
 
-        # stats["monotonic_increase_strict"] = (
-        #     stats["monotonic_increase"] and series.is_unique
-        # )
-        # stats["monotonic_decrease_strict"] = (
-        #     stats["monotonic_decrease"] and series.is_unique
-        # )
+        stats["monotonic_increase_strict"] = series.check_monotonic(decreasing=False, strict=True)
+        stats["monotonic_decrease_strict"] = series.check_monotonic(decreasing=True, strict=True)
 
         stats.update(histogram_compute(finite_values, series_description["n_distinct"]))
 

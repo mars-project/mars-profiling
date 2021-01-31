@@ -124,32 +124,32 @@ def render_real(summary):
     quantile_statistics = Table(
         [
             {"name": "Minimum", "value": summary["min"], "fmt": "fmt_numeric"},
-            # {"name": "5-th percentile", "value": summary["5%"], "fmt": "fmt_numeric"},
-            # {"name": "Q1", "value": summary["25%"], "fmt": "fmt_numeric"},
-            # {"name": "median", "value": summary["50%"], "fmt": "fmt_numeric"},
-            # {"name": "Q3", "value": summary["75%"], "fmt": "fmt_numeric"},
-            # {"name": "95-th percentile", "value": summary["95%"], "fmt": "fmt_numeric"},
+            {"name": "5-th percentile", "value": summary["5%"], "fmt": "fmt_numeric"},
+            {"name": "Q1", "value": summary["25%"], "fmt": "fmt_numeric"},
+            {"name": "median", "value": summary["50%"], "fmt": "fmt_numeric"},
+            {"name": "Q3", "value": summary["75%"], "fmt": "fmt_numeric"},
+            {"name": "95-th percentile", "value": summary["95%"], "fmt": "fmt_numeric"},
             {"name": "Maximum", "value": summary["max"], "fmt": "fmt_numeric"},
             {"name": "Range", "value": summary["range"], "fmt": "fmt_numeric"},
-            # {
-            #     "name": "Interquartile range (IQR)",
-            #     "value": summary["iqr"],
-            #     "fmt": "fmt_numeric",
-            # },
+            {
+                "name": "Interquartile range (IQR)",
+                "value": summary["iqr"],
+                "fmt": "fmt_numeric",
+            },
         ],
         name="Quantile statistics",
     )
 
-    # if summary["monotonic_increase_strict"]:
-    #     monotocity = "Strictly increasing"
-    # elif summary["monotonic_decrease_strict"]:
-    #     monotocity = "Strictly decreasing"
-    # elif summary["monotonic_increase"]:
-    #     monotocity = "Increasing"
-    # elif summary["monotonic_decrease"]:
-    #     monotocity = "Decreasing"
-    # else:
-    #     monotocity = "Not monotonic"
+    if summary["monotonic_increase_strict"]:
+        monotocity = "Strictly increasing"
+    elif summary["monotonic_decrease_strict"]:
+        monotocity = "Strictly decreasing"
+    elif summary["monotonic_increase"]:
+        monotocity = "Increasing"
+    elif summary["monotonic_decrease"]:
+        monotocity = "Decreasing"
+    else:
+        monotocity = "Not monotonic"
 
     descriptive_statistics = Table(
         [
@@ -158,11 +158,11 @@ def render_real(summary):
                 "value": summary["std"],
                 "fmt": "fmt_numeric",
             },
-            # {
-            #     "name": "Coefficient of variation (CV)",
-            #     "value": summary["cv"],
-            #     "fmt": "fmt_numeric",
-            # },
+            {
+                "name": "Coefficient of variation (CV)",
+                "value": summary["cv"],
+                "fmt": "fmt_numeric",
+            },
             {"name": "Kurtosis", "value": summary["kurtosis"], "fmt": "fmt_numeric"},
             {"name": "Mean", "value": summary["mean"], "fmt": "fmt_numeric"},
             # {
@@ -178,7 +178,7 @@ def render_real(summary):
             },
             {"name": "Sum", "value": summary["sum"], "fmt": "fmt_numeric"},
             {"name": "Variance", "value": summary["variance"], "fmt": "fmt_numeric"},
-            # {"name": "Monotocity", "value": monotocity, "fmt": "fmt"},
+            {"name": "Monotocity", "value": monotocity, "fmt": "fmt"},
         ],
         name="Descriptive statistics",
     )

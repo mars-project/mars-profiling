@@ -28,7 +28,7 @@ class ProfileReport(SerializeReport):
     def __init__(
         self,
         df=None,
-        minimal=False,
+        minimal=True,  # TODO change to False when extended args are supported
         explorative=False,
         sensitive=False,
         dark_mode=False,
@@ -47,6 +47,9 @@ class ProfileReport(SerializeReport):
             lazy: compute when needed
             **kwargs: other arguments, for valid arguments, check the default configuration file.
         """
+        if not minimal:
+            raise NotImplementedError('Non-minimal profiling not implemented')
+
         if config_file is not None and minimal:
             raise ValueError(
                 "Arguments `config_file` and `minimal` are mutually exclusive."
@@ -439,9 +442,8 @@ class ProfileReport(SerializeReport):
         # Rename reserved column names
         df = rename_index(df)
 
-        # FIXME commented as setting columns with Mars Index not supported
-        # # Ensure that columns are strings
-        # df.columns = df.columns.astype("str")
+        # Ensure that columns are strings
+        df.columns = df.columns.astype("str")
         return df
 
     @staticmethod
