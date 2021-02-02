@@ -11,7 +11,7 @@ with (source_root / "README.md").open(encoding="utf-8") as f:
 with (source_root / "requirements.txt").open(encoding="utf8") as f:
     requirements = f.readlines()
 
-version = "2.10.0"
+version = "0.1.0"
 
 with (source_root / "src" / "mars_profiling" / "version.py").open(
     "w", encoding="utf-8"
@@ -41,7 +41,7 @@ setup(
     },
     include_package_data=True,
     classifiers=[
-        "Development Status :: 5 - Production/Stable",
+        "Development Status :: 2 - Pre-Alpha",
         "Topic :: Software Development :: Build Tools",
         "License :: OSI Approved :: MIT License",
         "Environment :: Console",
