@@ -433,10 +433,7 @@ class ProfileReport(SerializeReport):
             The preprocessed DataFrame
         """
         # Treat index as any other column
-        if (
-            not pd.Index(np.arange(0, len(df))).equals(df.index)
-            or df.index.dtype != np.int64
-        ):
+        if df.index.dtype != np.int64:
             df = df.reset_index()
 
         # Rename reserved column names

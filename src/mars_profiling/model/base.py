@@ -6,8 +6,8 @@ from urllib.parse import ParseResult, urlparse
 
 import numpy as np
 import pandas as pd
+import mars.dataframe as md
 from pandas.api.types import is_categorical_dtype
-from mars.core import ExecutableTuple
 
 from mars_profiling.config import config
 from mars_profiling.utils.mars import fetch_mars_dict_results
@@ -61,7 +61,7 @@ ImagePath = Variable.TYPE_IMAGE
 Generic = Variable.S_TYPE_UNSUPPORTED
 
 
-def get_counts(series: pd.Series) -> dict:
+def get_counts(series: md.Series) -> dict:
     """Counts the values in a series (with and without NaN, distinct).
 
     Args:
@@ -80,12 +80,18 @@ def get_counts(series: pd.Series) -> dict:
     distinct_count_with_nan = value_counts_with_nan.count()
     distinct_count_without_nan = value_counts_without_nan.count()
 
+    series_type_results = series.map_chunk(lambda chunk: pd.DataFrame([[
+        pd.api.types.is_bool_dtype(chunk),
+        pd.api.types.is_numeric_dtype(chunk),
+    ]], columns=['is_bool', 'is_numeric'])).all()
+
     return {
         "value_counts": value_counts_without_nan,  # Alias
         "value_counts_with_nan": value_counts_with_nan,
         "value_counts_without_nan": value_counts_without_nan,
         "distinct_count_with_nan": distinct_count_with_nan,
         "distinct_count_without_nan": distinct_count_without_nan,
+        "series_type_results": series_type_results,
     }
 
 
@@ -99,16 +105,17 @@ def is_boolean(series: pd.Series, series_description: dict) -> bool:
     Returns:
         True is the series is boolean type in the broad sense (e.g. including yes/no, NaNs allowed).
     """
-    keys = series_description["value_counts_without_nan"].keys()
-    if pd.api.types.is_bool_dtype(keys):
+    series_type_results = series_description["series_type_results"]
+    if series_type_results["is_bool"]:
         return True
     elif (
         1 <= series_description["distinct_count_without_nan"] <= 2
-        and pd.api.types.is_numeric_dtype(series)
+        and series_type_results['is_numeric']
         and series[~series.isnull()].between(0, 1).all()
     ):
         return True
     elif 1 <= series_description["distinct_count_without_nan"] <= 4:
+        keys = series_description["value_counts_without_nan"].keys()
         unique_values = {str(value).lower() for value in keys.values}
         accepted_combinations = [
             ["y", "n"],
@@ -135,7 +142,8 @@ def is_numeric(series: pd.Series, series_description: dict) -> bool:
     Returns:
         True is the series is numeric type (NaNs allowed).
     """
-    return pd.api.types.is_numeric_dtype(series) and (
+    series_type_results = series_description["series_type_results"]
+    return series_type_results["is_numeric"] and (
         series_description["distinct_count_without_nan"]
         >= config["vars"]["num"]["low_categorical_threshold"].get(int)
         or series.isin({np.inf, -np.inf}).any()
@@ -257,12 +265,15 @@ def get_var_type(series: pd.Series) -> dict:
         series_description = get_counts(series)
         fetch_mars_dict_results(series_description)
 
+        if series_description["distinct_count_with_nan"] < 10:
+            fetch_mars_dict_results(series_description, ignore_value_counts=False)
+
         # When the inferred type of the index is just "mixed" probably the types within the series are tuple, dict,
         # list and so on...
-        if series_description[
-            "value_counts_without_nan"
-        ].index.inferred_type.startswith("mixed"):
-            raise TypeError("Not supported mixed type")
+        # if series_description[
+        #     "value_counts_without_nan"
+        # ].index.inferred_type.startswith("mixed"):
+        #     raise TypeError("Not supported mixed type")
 
         if series_description["distinct_count_without_nan"] == 0:
             # Empty

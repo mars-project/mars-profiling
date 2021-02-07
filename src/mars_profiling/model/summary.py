@@ -4,6 +4,7 @@ import multiprocessing
 import multiprocessing.pool
 import string
 import warnings
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Callable, Mapping, Optional, Tuple
 from urllib.parse import urlsplit
@@ -11,8 +12,9 @@ from urllib.parse import urlsplit
 import numpy as np
 import pandas as pd
 import mars.tensor as mt
+from mars.session import Session as MarsSession
 from pandas.core.arrays.integer import _IntegerDtype
-from scipy.stats.stats import chisquare
+from mars.tensor.stats import chisquare
 from visions.application.summaries.series import (
     file_summary,
     image_summary,
@@ -83,7 +85,7 @@ def describe_1d(series: pd.Series) -> dict:
         """
 
         # number of observations in the Series
-        length = len(series)
+        length = series.agg('size')
 
         # number of non-NaN observations in the Series
         count = series.count()
@@ -144,33 +146,78 @@ def describe_1d(series: pd.Series) -> dict:
 
         return stats
 
+    def value_counts_stats(series_description: dict):
+        """Generate stats for value_counts results
+        """
+        n_extreme_obs = config["n_extreme_obs"].get(int)
+        n_freq_table_max = config["n_freq_table_max"].get(int)
+        
+        freqtable = series_description['value_counts']
+        trunc_freq = freqtable.iloc[n_freq_table_max:]
+
+        asc_freqtable = freqtable.sort_index(ascending=True)
+        asc_obs_to_print = asc_freqtable.iloc[:n_extreme_obs]
+        asc_max_freq = asc_obs_to_print.max()
+
+        desc_freqtable = freqtable.sort_index(ascending=False)
+        desc_obs_to_print = desc_freqtable.iloc[:n_extreme_obs]
+        desc_max_freq = desc_obs_to_print.max()
+
+        stats = {
+            'agg_results': freqtable.agg(['sum', 'size', 'count']),
+            'head_table': freqtable.iloc[0:n_freq_table_max],
+            'first_value': freqtable.iloc[0],
+            'asc_obs_to_print': asc_obs_to_print,
+            'asc_max_freq': asc_max_freq,
+            'desc_obs_to_print': desc_obs_to_print,
+            'desc_max_freq': desc_max_freq,
+        }
+        if series_description['distinct_count_without_nan'] <= n_freq_table_max:
+            stats.update({
+                'freq_other': 0,
+                'min_freq': 0,
+            })
+        else:
+            stats.update({
+                'freq_other': trunc_freq.sum(),
+                'min_freq': trunc_freq.iloc[0],
+            })
+        series_description['_stats_ref_keeper'] = stats
+        return stats
+
     def numeric_stats_pandas(series: pd.Series):
+        series_agg = series.agg(['mean', 'std', 'var', 'min', 'max', 'skew', 'kurt', 'sum'])
         return {
-            "mean": series.mean(),
-            "std": series.std(),
-            "variance": series.var(),
-            "min": series.min(),
-            "max": series.max(),
+            "mean": series_agg['mean'],
+            "std": series_agg['std'],
+            "variance": series_agg['var'],
+            "min": series_agg['min'],
+            "max": series_agg['max'],
             # Unbiased kurtosis obtained using Fisher's definition (kurtosis of normal == 0.0). Normalized by N-1.
-            "kurtosis": series.kurt(),
+            "kurtosis": series_agg['kurt'],
             # Unbiased skew normalized by N-1
-            "skewness": series.skew(),
-            "sum": series.sum(),
+            "skewness": series_agg['skew'],
+            "sum": series_agg['sum'],
         }
 
     def numeric_stats_numpy(present_values):
+        nz_count = lambda s: s.ne(0).sum()
+        nz_count.__name__ = 'nz_count'
+        present_values_agg = present_values.agg(['mean', 'std', 'var', 'min', 'max', 'sum', nz_count])
+        series_agg = series.agg(['skew', 'kurt'])
+
         return {
-            "mean": present_values.mean(),
-            "std": present_values.std(ddof=1),
-            "variance": present_values.var(ddof=1),
-            "min": present_values.min(),
-            "max": present_values.max(),
+            "mean": present_values_agg['mean'],
+            "std": present_values_agg['std'],
+            "variance": present_values_agg['var'],
+            "min": present_values_agg['min'],
+            "max": present_values_agg['max'],
             # Unbiased kurtosis obtained using Fisher's definition (kurtosis of normal == 0.0). Normalized by N-1.
-            "kurtosis": series.kurt(),
+            "kurtosis": series_agg['kurt'],
             # Unbiased skew normalized by N-1
-            "skewness": series.skew(),
-            "sum": present_values.sum(),
-            "n_zeros": (series_description["count"] - present_values.ne(0).sum()),
+            "skewness": series_agg['skew'],
+            "sum": present_values_agg['sum'],
+            "n_zeros": (series_description["count"] - present_values_agg['nz_count']),
         }
 
     def describe_numeric_1d(series: pd.Series, series_description: dict) -> dict:
@@ -208,19 +255,19 @@ def describe_1d(series: pd.Series) -> dict:
             stats["n_zeros"] = series_description["count"] - np.count_nonzero(
                 present_values
             )
-            stats["histogram_data"] = present_values
+            # stats["histogram_data"] = present_values
             finite_values = present_values
         else:
             # values = series.values
             present_values = series[series.notna()]
             finite_values = series[np.isfinite(series)]
             stats = numeric_stats_numpy(present_values)
-            stats["histogram_data"] = finite_values
+            # stats["histogram_data"] = finite_values
 
         stats.update(
             {
                 # "mad": mad(present_values),
-                "scatter_data": series,  # For complex
+                # "scatter_data": series,  # For complex
                 "p_infinite": n_infinite / series_description["n"],
                 "n_infinite": n_infinite,
             }
@@ -234,9 +281,12 @@ def describe_1d(series: pd.Series) -> dict:
             stats["chi_squared"] = chisquare(histogram)
 
         stats["range"] = stats["max"] - stats["min"]
+
+        quantile_results = series.quantile(quantiles)
         stats.update({
-            f"{q:.0%}": series.quantile(q) for q in quantiles
+            f"{q:.0%}": quantile_results[q] for q in quantiles
         })
+
         stats["iqr"] = stats["75%"] - stats["25%"]
         stats["cv"] = stats["std"] / stats["mean"]
         stats["p_zeros"] = stats["n_zeros"] / series_description["n"]
@@ -248,8 +298,8 @@ def describe_1d(series: pd.Series) -> dict:
         stats["monotonic_decrease_strict"] = series.check_monotonic(decreasing=True, strict=True)
 
         stats.update(histogram_compute(finite_values, series_description["n_distinct"]))
+        stats.update(value_counts_stats(series_description))
 
-        fetch_mars_dict_results(stats)
         return stats
 
     def describe_date_1d(series: pd.Series, series_description: dict) -> dict:
@@ -296,8 +346,12 @@ def describe_1d(series: pd.Series) -> dict:
 
         # Only run if at least 1 non-missing value
         value_counts = series_description["value_counts_without_nan"]
+        distinct_counts = series_description["distinct_count_with_nan"]
 
-        stats = {"top": value_counts.index[0], "freq": value_counts.iloc[0]}
+        stats = {
+            "top": value_counts.index[0],
+            "freq": value_counts.iloc[0]
+        }
 
         redact = config["vars"]["cat"]["redact"].get(float)
         if not redact:
@@ -305,7 +359,7 @@ def describe_1d(series: pd.Series) -> dict:
 
         stats.update(
             histogram_compute(
-                value_counts, len(value_counts), name="histogram_frequencies"
+                value_counts, distinct_counts, name="histogram_frequencies"
             )
         )
 
@@ -490,7 +544,6 @@ def describe_1d(series: pd.Series) -> dict:
         del series_description["value_counts_without_nan"]
 
     # Return the description obtained
-    fetch_mars_dict_results(series_description)
     return series_description
 
 
@@ -499,7 +552,7 @@ def get_series_description(series):
 
 
 def get_series_descriptions(df, pbar):
-    def multiprocess_1d(args) -> Tuple[str, dict]:
+    def multiprocess_1d(args, session) -> Tuple[str, dict]:
         """Wrapper to process series in parallel.
 
         Args:
@@ -509,24 +562,34 @@ def get_series_descriptions(df, pbar):
         Returns:
             A tuple with column and the series description.
         """
+        session.as_default()
         column, series = args
-        return column, describe_1d(series)
+        return column, fetch_mars_dict_results(describe_1d(series))
 
     # Multiprocessing of Describe 1D for each column
     pool_size = config["pool_size"].get(int)
     if pool_size <= 0:
-        pool_size = multiprocessing.cpu_count()
+        pool_size = MarsSession.default_or_local().get_cpu_count()
 
     args = [(column, series) for column, series in df.iteritems()]
     series_description = {}
 
-    tileables_to_execute = []
-
+    executor = ThreadPoolExecutor(4)  # pool_size)
+    futures = []
     for arg in args:
+        futures.append(executor.submit(multiprocess_1d, arg, MarsSession.default_or_local()))
+
+    to_fetches = dict()
+    col_keys_list = []
+    for arg, future in zip(args, futures):
+        column, description = future.result()
+        col_keys_list.append((column, [(desc_key, arg[0]) for desc_key in description.keys()]))
+        to_fetches.update({(desc_key, arg[0]): val for desc_key, val in description.items()})
+
+    fetch_mars_dict_results(to_fetches)
+    for arg, (column, col_keys) in zip(args, col_keys_list):
         pbar.set_postfix_str(f"Describe variable:{arg[0]}")
-        column, description = multiprocess_1d(arg)
-        tileables_to_execute.extend(description.values())
-        series_description[column] = description
+        series_description[column] = {key[0]: to_fetches[key] for key in col_keys}
         pbar.update()
 
     # Mapping from column name to variable type
@@ -545,20 +608,19 @@ def get_table_stats(df: pd.DataFrame, variable_stats: pd.DataFrame) -> dict:
     Returns:
         A dictionary that contains the table statistics.
     """
-    n = len(df)
-
-    memory_size = df.memory_usage(deep=config["memory_deep"].get(bool)).sum().execute().fetch()
-    record_size = float(memory_size) / n
-
     table_stats = {
-        "n": n,
+        'n': df.agg('size'),
+        'memory_size': df.memory_usage(deep=config["memory_deep"].get(bool)).sum(),
+    }
+    table_stats['record_size'] = table_stats['memory_size'] / table_stats['n']
+    n = table_stats['n']
+
+    table_stats.update({
         "n_var": len(df.columns),
-        "memory_size": memory_size,
-        "record_size": record_size,
         "n_cells_missing": variable_stats.loc["n_missing"].sum(),
         "n_vars_with_missing": sum((variable_stats.loc["n_missing"] > 0).astype(int)),
         "n_vars_all_missing": sum((variable_stats.loc["n_missing"] == n).astype(int)),
-    }
+    })
 
     table_stats["p_cells_missing"] = table_stats["n_cells_missing"] / (
         table_stats["n"] * table_stats["n_var"]
@@ -578,7 +640,8 @@ def get_table_stats(df: pd.DataFrame, variable_stats: pd.DataFrame) -> dict:
         if len(supported_columns) > 0
         else 0
     )
-    table_stats.update(fetch_mars_dict_results(duplicated_dict))
+    table_stats.update(duplicated_dict)
+    fetch_mars_dict_results(table_stats)
 
     # Variable type counts
     table_stats.update({k.value: 0 for k in Variable})

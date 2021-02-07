@@ -1,5 +1,7 @@
 from typing import Dict, Sequence
 
+from mars_profiling.utils.mars import fetch_mars_dict_results
+
 
 def freq_table(freqtable, n: int, max_number_to_print: int) -> Sequence[Dict]:
     """Render the rows for a frequency table (value, count).
@@ -12,25 +14,38 @@ def freq_table(freqtable, n: int, max_number_to_print: int) -> Sequence[Dict]:
     Returns:
         The rows of the frequency table.
     """
+    freq_table_stats = {
+        'agg_results': freqtable.agg(['sum', 'size', 'count']),
+        'head_table': freqtable.iloc[0:max_number_to_print],
+        'first_value': freqtable.iloc[0],
+    }
+    fetch_mars_dict_results(freq_table_stats)
+
+    tail_table = freqtable.iloc[max_number_to_print:]
 
     # TODO: replace '' by '(Empty)' ?
 
     if max_number_to_print > n:
         max_number_to_print = n
 
-    if max_number_to_print < len(freqtable):
-        freq_other = sum(freqtable.iloc[max_number_to_print:])
-        min_freq = freqtable.values[max_number_to_print]
+    if max_number_to_print < freq_table_stats['agg_results']['size']:
+        freq_other_stats = {
+            'freq_other': tail_table.sum(),
+            'min_freq': tail_table.iloc[0],
+        }
+        fetch_mars_dict_results(freq_other_stats)
+        freq_other = freq_other_stats['freq_other']
+        min_freq = freq_other_stats['min_freq']
     else:
         freq_other = 0
         min_freq = 0
 
-    freq_missing = n - sum(freqtable)
+    freq_missing = n - freq_table_stats['agg_results']['sum']
     # No values
-    if len(freqtable) == 0:
+    if freq_table_stats['agg_results']['size'] == 0:
         return []
 
-    max_freq = max(freqtable.values[0], freq_other, freq_missing)
+    max_freq = max(freq_table_stats['first_value'], freq_other, freq_missing)
 
     # TODO: Correctly sort missing and other
     # No values
@@ -38,7 +53,7 @@ def freq_table(freqtable, n: int, max_number_to_print: int) -> Sequence[Dict]:
         return []
 
     rows = []
-    for label, freq in freqtable.iloc[0:max_number_to_print].items():
+    for label, freq in freq_table_stats['head_table'].items():
         rows.append(
             {
                 "label": label,
@@ -51,7 +66,7 @@ def freq_table(freqtable, n: int, max_number_to_print: int) -> Sequence[Dict]:
         )
 
     if freq_other > min_freq:
-        other_count = str(freqtable.count() - max_number_to_print)
+        other_count = str(freq_table_stats['agg_results']['count'] - max_number_to_print)
         rows.append(
             {
                 "label": f"Other values ({other_count})",
@@ -94,12 +109,19 @@ def extreme_obs_table(freqtable, number_to_print, n, ascending=True) -> list:
     # If it's mixed between base types (str, int) convert to str. Pure "mixed" types are filtered during type
     # discovery
     # TODO: should be in cast?
-    if "mixed" in freqtable.index.inferred_type:
-        freqtable.index = freqtable.index.astype(str)
+    # if "mixed" in freqtable.index.inferred_type:
+    #     freqtable.index = freqtable.index.astype(str)
 
     sorted_freqtable = freqtable.sort_index(ascending=ascending)
     obs_to_print = sorted_freqtable.iloc[:number_to_print]
-    max_freq = max(obs_to_print.values)
+    freq_dict = {
+        'obs_to_print': obs_to_print,
+        'max_freq': obs_to_print.max(),
+    }
+    fetch_mars_dict_results(freq_dict)
+
+    obs_to_print = freq_dict['obs_to_print']
+    max_freq = freq_dict['max_freq']
 
     rows = []
     for label, freq in obs_to_print.items():
